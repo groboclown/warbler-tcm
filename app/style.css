@@ -1,0 +1,21 @@
+html {
+  margin:0;
+  padding:0;
+  height:100%;
+}
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #333;
+  color: #ccc;
+  height: 100%;
+  font-family: arial,sans-serif;
+}
+
+#loading {
+  width: 100%;
+  padding-top: 2em;
+  font-size:4em;
+  vertical-align: center;
+  text-align: center;
+}

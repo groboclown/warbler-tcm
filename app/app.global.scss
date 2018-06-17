@@ -1,0 +1,47 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #333;
+  color: #ccc;
+  font-family: arial,sans-serif;
+}
+
+
+#ProjectContainer .tree-view {
+  overflow-y: hidden;
+}
+
+#ProjectContainer .tree-view_item {
+  /* immediate child of .tree-view, for styling convenience */
+}
+
+/* style for the children nodes container */
+#ProjectContainer .tree-view_children {
+  margin-left: 2em;
+}
+
+#ProjectContainer .tree-view_children-collapsed {
+  height: 0px;
+}
+
+#ProjectContainer .tree-view_arrow {
+  cursor: pointer;
+  margin-right: 6px;
+  display: inline-block;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+#ProjectContainer .tree-view_arrow:after {
+  content: '▾';
+}
+
+/* rotate the triangle to close it */
+#ProjectContainer .tree-view_arrow-collapsed {
+  -webkit-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  -ms-transform: rotate(-90deg);
+  transform: rotate(-90deg);
+}

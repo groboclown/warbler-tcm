@@ -1,0 +1,291 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "description": "Unified test plan",
+  "type": "object",
+  "required": ["id"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "description": "Short, unique identifier for the test plan.",
+      "type": "string"
+    },
+    "name": {
+      "description": "Descriptive name for the test plan.",
+      "type": "string"
+    },
+    "revisions": {
+      "description": "A list of revisions of the test plan; useful for
+      distributing a complete document of test cases, or for making
+      markers for past revisions that are at a more coarse grain level
+      than the SCM level.",
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "description": "A test plan revision",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["revId"],
+        "properties": {
+          "metadata": { "$ref": "#/definitions/metadata" },
+          "description": {
+            "description": "Long form description for the test plan.
+            By having it be in the revision, it allows for easy comparison
+            of how the test plan has evolved.",
+            "type": "string"
+          },
+          "revId": {
+            "description": "ID of the specific revision. Allows for easier
+            diffs between revisions. Also allows for more flexible references
+            to specific revisions than the index in the list.",
+            "type": "string"
+          },
+          "product": {
+            "description": "The name of the product this tests",
+            "type": "string"
+          },
+          "setup": {
+            "description": "Instructions for setting up the environment in
+            preparation for running the test cases.",
+            "$ref": "#/definitions/orderedTextList"
+          },
+          "teardown": {
+            "description": "Instructions for stopping the environment after
+            test caes execution has completed.",
+            "$ref": "#/definitions/orderedTextList"
+          },
+          "testFields": {
+            "description": "List of fields in the test cases and their visiblity.",
+            "$ref": "#/definitions/fieldsMetadata"
+          },
+          "runFields": {
+            "description": "List of fields in the test cases and their visiblity.",
+            "$ref": "#/definitions/fieldsMetadata"
+          },
+          "tests": {
+            "description": "List of test cases within the test plan.",
+            "type": "array",
+            "items": {
+              "description": "A single test case.",
+              "type": "object",
+              "additionalProperties": true,
+              "required": ["tcId"],
+              "properties": {
+                "metadata": { "$ref": "#/definitions/metadata" },
+                "tcId": {
+                  "description": "Test case ID",
+                  "type": "string"
+                },
+                "section": {
+                  "description": "general area of functionality covered",
+                  "type": "string"
+                },
+                "objective": {
+                  "description": "A short summary of the test case",
+                  "type": "string"
+                },
+                "comment": {
+                  "description": "A comment about the test case.",
+                  "type": "string",
+                  "format": "markdown"
+                },
+                "setup": {
+                  "description": "Instructions for preparing the environment
+                  in order to execute the test case.",
+                  "$ref": "orderedTextList"
+                },
+                "steps": {
+                  "description": "Instructions to execute after the test case
+                  completes.",
+                  "$ref": "orderedTextList"
+                },
+                "expected": {
+                  "description": "Expected outcomes of the test execution
+                  steps.  The IDs for each item should match up with the
+                  corresponding test step.",
+                  "$ref": "orderedTextList"
+                },
+                "teardown": {
+                  "description": "Instructions to execute after the test case
+                  completes.",
+                  "$ref": "orderedTextList"
+                },
+                "priority": {
+                  "description": "Priority for execution",
+                  "type": "integer",
+                  "enum": [1,2,3,4,5]
+                },
+                "requirements": {
+                  "description": "List of requirements that this covers",
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "ticket-id"
+                  },
+                  "uniqueItems": true
+                }
+              }
+            }
+          },
+          "runs": {
+            "description": "A list of executions of the test cases for this
+            revision of the test plan.",
+            "type": "array",
+            "items": {
+              "description": "A single test execution of the test plan revision.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["runId"],
+              "properties": {
+                "metadata": { "$ref": "#/definitions/metadata" },
+                "runId": {
+                  "description": "A short ID for this test case execution.",
+                  "type": "string"
+                },
+                "comment": {
+                  "description": "A comment about the test plan execution.",
+                  "type": "string",
+                  "format": "markdown"
+                },
+                "version": {
+                  "description": "Product version under test",
+                  "type": "string"
+                },
+                "results": {
+                  "description": "List of test cases executed.",
+                  "type": "array",
+                  "items": {
+                    "description": "A test case execution result",
+                    "type": "object",
+                    "required": ["tcId"],
+                    "additionalProperties": true,
+                    "properties": {
+                      "tcId": {
+                        "description": "reference to the test case ID",
+                        "type": "string"
+                      },
+                      "status": {
+                        "description": "state of the test execution",
+                        "type": "string",
+                        "enum": [
+                          "passed",
+                          "failed",
+                          "skipped",
+                          "blocked",
+                          "invalid",
+                          "wontfix",
+                          "running"
+                        ]
+                      },
+                      "issues": {
+                        "description": "list of problems encountered when
+                        running this test case",
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "format": "ticket-id"
+                        },
+                        "uniqueItems": true
+                      },
+                      "stepComments": {
+                        "description": "Rich text comments about the test
+                        results.  The item IDs references the setup,
+                        teardown, or step ID.",
+                        "$ref": "orderedTextList"
+                      },
+                      "comments": {
+                        "description": "Rich text comments about the test results",
+                        "type": "string",
+                        "format": "markdown"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "metadata": {
+      "description": "Common meta-data about an item.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "creationDate": {
+          "description": "Date indicating when the object was made.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "authors": {
+          "description": "Person(s) who worked on the object.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "name"
+          }
+        },
+        "tags": {
+          "description": "List of tags for easier searching",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "tag"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "orderedTextList": {
+      "description": "A list that is easily ordered for comparison.",
+      "type": "array",
+      "items": {
+        "description": "ordered list item",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "simple ID of the list item, but should not change,
+            so that lists can be easily compared.",
+            "type": "string"
+          },
+          "text": {
+            "description": "rich text",
+            "type": "string",
+            "format": "markdown"
+          }
+        }
+      }
+    },
+    "fieldsMetadata": {
+      "description": "High level details about what fields are visible or
+      required.",
+      "type": "object",
+      "items": {
+        "type": "object",
+        "additionalProperties": "false",
+        "patternProperties": {
+          "^\\w+$": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "description": "Data type of the field",
+                "type": "string",
+                "enum": ["date", "time", "date-time", "integer", "float", "text", "markdown"]
+              },
+              "format": {
+                "description": "Format of the data.  Only usable for date, time, and text types",
+                "type": "string"
+              },
+              "visibility": {
+                "description": "Is the field required or even visible?",
+                "type": "string",
+                "enum": ["required", "optional", "hidden"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

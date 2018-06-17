@@ -1,0 +1,22 @@
+{
+  "name": "wimbrel-tcm",
+  "productName": "Wimbrel TCM",
+  "version": "1.0.0",
+  "description": "File-based Test case management tool",
+  "main": "./main.js",
+  "author": {
+    "name": "Groboclown",
+    "email": "groboclown@gmail.com",
+    "url": "https://github.com/groboclown"
+  },
+  "scripts": {
+    "postinstall": "npm rebuild --runtime=electron --target=1.6.6 --disturl=https://atom.io/download/atom-shell --build-from-source"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "react-tabs": "^2.2.2"
+  },
+  "devDependencies": {
+    "react-treeview": "^0.4.7"
+  }
+}
