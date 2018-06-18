@@ -44,4 +44,6 @@ export abstract class ScmApi {
   abstract delete(filename: string): Promise<void>
 
   abstract listFilesIn(directoryName: string): Promise<FileState[]>
+
+  abstract loadFileRevision(revision: FileHistory): Promise<Buffer | null>
 }

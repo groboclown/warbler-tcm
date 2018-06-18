@@ -18,6 +18,7 @@ export class Settings {
       })
   }
   save(): Promise<Settings> {
+    console.log(`Saving settings to ${this.source}`)
     return writeJsonFile(this.source, this.settings)
       .then(() => {
         return this
@@ -57,7 +58,7 @@ export function loadSettings(): Promise<Settings> {
 
 function getSettingsFilename(): string {
   if (!remote) {
-    return join(app.getPath('userData'), 'settings.json')
+    return join(app.getPath('userData'), 'warbler-settings.json')
   }
-  return join(remote.app.getPath('userData'), 'settings.json')
+  return join(remote.app.getPath('userData'), 'warbler-settings.json')
 }

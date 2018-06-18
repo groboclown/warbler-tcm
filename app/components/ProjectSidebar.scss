@@ -22,7 +22,7 @@
   }
   .titlebutton {
     border: 1px #666 solid;
-    margin-left: .3em;
+    margin: 0.8em;
     background-color: #444;
     font-size: 0.8rem;
     cursor: pointer;
@@ -32,6 +32,7 @@
     overflow-x: scroll;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: default;
   }
   .treeContainer div {
     overflow: hidden;
@@ -44,14 +45,47 @@
     color: #ccc;
   }
   .selected {
-    background-color: #666
+    background-color: #366;
   }
   .planFile {
-    color: #393;
+    color: #5aa;
     font-weight: bold;
+    cursor: pointer;
   }
   .projectFile {
-    color: #993;
+    color: #777;
     font-weight: normal;
+    cursor: not-allowed;
+  }
+
+
+
+  .hamburger {
+    /*color: #ccc;
+    border-bottom: 0.125em solid #ccc;*/
+    content: "";
+    background: linear-gradient(
+      to bottom,
+      #5aa, #5aa 20%,
+      #111 20%, #111 40%,
+      #5aa 40%, #5aa 60%,
+      #111 60%, #111 80%,
+      #5aa 80%, #5aa 100%
+    );
+      width: 2em;
+    cursor: pointer;
+  }
+
+  .popup {
+    visibility: hidden;
+    position: absolute;
+    background: #344;
+    padding: 1em;
+    color: #ccc;
+    right: 0;
+    z-index: 7;
+  }
+  .show {
+    visibility: visible;
   }
 }

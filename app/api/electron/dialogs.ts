@@ -12,10 +12,12 @@ export function addProjectDialog() {
     properties: ['openDirectory']
   }, (filePaths: string[]) => {
     console.log(`Files: ${filePaths}`)
-    getAttachedProjects()
-      .then((attached) => {
-        filePaths.forEach((f) => { attached.push(createAttachedProject(f)) })
-        updateAttachedProjects(attached)
-      })
+    if (filePaths) {
+      getAttachedProjects()
+        .then((attached) => {
+          filePaths.forEach((f) => { attached.push(createAttachedProject(f)) })
+          updateAttachedProjects(attached)
+        })
+    }
   })
 }

@@ -1,15 +1,16 @@
 import * as React from 'react';
 import * as TreeView from 'react-treeview'
-import * as Projects from '../api/state/projects'
+import * as projectState from '../api/state/projects'
 import * as scm from '../api/scm'
 import * as path from 'path'
 import * as dialogs from '../api/electron/dialogs'
+import * as testPlanState from '../api/state/test-plan'
 
 let styles = require('./ProjectSidebar.scss');
 
 interface ProjectDetails {
-  project: Projects.Project
-  attachedProject: Projects.AttachedProject
+  project: projectState.Project
+  attachedProject: projectState.AttachedProject
 }
 
 
@@ -18,25 +19,27 @@ export interface State {
 
   // TODO make the loaded setting
   showDeleted: boolean
+  showNonTestPlanFiles: boolean
 
   selectedFile: string | null
 }
 
 export default class ProjectSidebar extends React.Component<any, State> {
-  private projectsUpdatedListener = (evt: Projects.AttachedProjectsUpdated) => { this.onProjectsUpdated(evt) }
+  private projectsUpdatedListener = (evt: projectState.AttachedProjectsUpdated) => { this.onProjectsUpdated(evt) }
 
   constructor(props: any) {
     super(props)
     this.state = {
       projectDetails: [],
       showDeleted: false,
+      showNonTestPlanFiles: false,
       selectedFile: null
     }
-    Projects.getAttachedProjects()
+    projectState.getAttachedProjects()
       .then((aps) => {
         return Promise.all(aps.map((ap): ProjectDetails => {
           return {
-            project: new Projects.Project(ap),
+            project: new projectState.Project(ap),
             attachedProject: ap
           }
         }))
@@ -53,17 +56,25 @@ export default class ProjectSidebar extends React.Component<any, State> {
   }
 
   render() {
+    // TODO Clean up these buttons.
+
     return (
       <div className={styles.container} id='ProjectContainer'>
         <div className={styles.titlebar}>
           <span className={styles.title}>Projects</span>
           <span className={styles.titlebuttons}>
-            <span className={styles.titlebutton} onClick={() => { this.addProject() }}>+</span>
-            <span className={styles.titlebutton} onClick={() => { this.removeSelectedProject() }}>-</span>
-            <span className={[styles.titlebutton,
-              (this.state.showDeleted ? styles.enabled : styles.disabled)]
-              .join(' ')}>D</span>
+            <span className={styles.hamburger} onClick={() => { this.toggleSettings() }}>&nbsp;&nbsp;&nbsp;</span>
           </span>
+        </div>
+        <div className={styles.popup} id="settingsPopUp">
+            <div className={styles.titlebutton} onClick={() => { this.addProject() }}>Add Project Folder</div>
+            <div className={styles.titlebutton} onClick={() => { this.removeSelectedProject() }}>Remove Project Folder</div>
+            <div onClick={() => { this.toggleShowNonTestPlanFiles() }}><span className={[styles.titlebutton,
+              (this.state.showNonTestPlanFiles ? styles.enabled : styles.disabled)].join(' ')}>x</span><span>Show non-test plan files</span></div>
+            <div className={[styles.titlebutton,
+              (this.state.showDeleted ? styles.enabled : styles.disabled)]
+              .join(' ')}
+              onClick={() => { this.toggleShowDeletedFiles() }}>Show deleted files</div>
         </div>
         <div className={styles.treeContainer}>
         {this.state.projectDetails.map((pd) => { return this.renderProject(pd.project) })}
@@ -72,8 +83,8 @@ export default class ProjectSidebar extends React.Component<any, State> {
     );
   }
 
-  renderProject(project: Projects.Project): JSX.Element {
-    project.childProjects.sort((p1: Projects.Project, p2: Projects.Project) => {
+  renderProject(project: projectState.Project): JSX.Element {
+    project.childProjects.sort((p1: projectState.Project, p2: projectState.Project) => {
       return strSort(p1.name, p2.name)})
     project.planFiles.sort((f1: scm.FileState, f2: scm.FileState) => {
       return strSort(f1.file, f2.file)})
@@ -81,24 +92,42 @@ export default class ProjectSidebar extends React.Component<any, State> {
       return strSort(f1.file, f2.file)})
     // TODO: file / directory type should indicate the icon,
     // while the SCM type should indicate the color.
+    let treeViewLabel = (<span
+      onClick={() => { this.onProjectClicked(project, false) }}
+      onDoubleClick={() => { this.onProjectClicked(project, true) }}>
+      {project.name}
+      </span>
+    )
     return (
       <TreeView
-            nodeLabel={project.name}
+            nodeLabel={treeViewLabel}
             defaultCollapsed={true}
-            onClick={() => { this.onProjectClicked(project) }}
+            onClick={() => { this.onProjectClicked(project, false) }}
+            onDoubleClick={() => { this.onProjectClicked(project, true) }}
             itemClassName={(this.state.selectedFile == project.rootFolder ? styles.selected : '')}>
           {project.childProjects.map((p) => { return this.renderProject(p) })}
-          {project.planFiles.map((f) => { return (
-            <div
-              onClick={() => { this.onPlanFileClicked(project, f, false) }}
-              onDoubleClick={() => { this.onPlanFileClicked(project, f, true) }}
-              className={[
-                (this.state.selectedFile == f.file ? styles.selected : '')
-              ].join(' ')}
-              ><span className={styles.planFile}>{path.basename(f.file)}</span>
-            </div>
-          )})}
-          {project.projectFiles.map((f) => { return (
+          {this.renderPlanFiles(project)}
+          {this.renderProjectFiles(project)}
+      </TreeView>
+    )
+  }
+
+  renderPlanFiles(project: projectState.Project) {
+    return project.planFiles.map((f) => { return (
+        <div
+          onClick={() => { this.onPlanFileClicked(f) }}
+          onDoubleClick={() => { this.onPlanFileClicked(f) }}
+          className={[
+            (this.state.selectedFile == f.file ? styles.selected : '')
+          ].join(' ')}
+          ><span className={styles.planFile}>{path.basename(f.file)}</span>
+        </div>
+      )})
+  }
+
+  renderProjectFiles(project: projectState.Project) {
+    if (this.state.showNonTestPlanFiles) {
+      return project.projectFiles.map((f) => { return (
             <div
               onClick={() => { this.onProjectFileClicked(project, f, false) }}
               onDoubleClick={() => { this.onProjectFileClicked(project, f, true) }}
@@ -107,37 +136,73 @@ export default class ProjectSidebar extends React.Component<any, State> {
               ].join(' ')}
               ><span className={styles.projectFile}>{path.basename(f.file)}</span>
             </div>
-          )})}
-      </TreeView>
-    )
+      )})
+    }
+    return null
+  }
+
+  toggleSettings() {
+    let el = document.getElementById('settingsPopUp');
+    if (el) { el.classList.toggle(styles.show) }
+  }
+
+  closeSettingsPopup() {
+    let el = document.getElementById('settingsPopUp');
+    if (el) { el.classList.remove(styles.show) }
   }
 
   addProject() {
+    this.closeSettingsPopup()
     dialogs.addProjectDialog()
   }
 
   removeSelectedProject() {
+    this.closeSettingsPopup()
     console.log(`Remove selected project`)
   }
 
-  onProjectClicked(pd: Projects.Project) {
-    console.log(`Clicked project ${pd.rootFolder}`)
+  toggleShowDeletedFiles() {
+    this.closeSettingsPopup()
     this.setState({
-      selectedFile: pd.rootFolder
+      showDeleted: !this.state.showDeleted
     })
   }
 
-  onPlanFileClicked(project: Projects.Project, file: scm.FileState, doubleClick: boolean) {
-    console.log(`Clicked plan ${doubleClick} ${project.rootFolder} ${file.file}`)
+  toggleShowNonTestPlanFiles() {
+    this.closeSettingsPopup()
+    this.setState({
+      showNonTestPlanFiles: !this.state.showNonTestPlanFiles
+    })
   }
 
-  onProjectFileClicked(project: Projects.Project, file: scm.FileState, doubleClick: boolean) {
+  onProjectClicked(pd: projectState.Project, doubleClick: boolean) {
+    console.log(`Clicked project ${pd.rootFolder}`)
+    this.closeSettingsPopup()
+    this.setState({
+      selectedFile: pd.rootFolder
+    })
+    if (doubleClick) {
+      projectState.sendRequestViewProjectDetails(pd.attached)
+    }
+  }
+
+  onPlanFileClicked(file: scm.FileState) {
+    this.closeSettingsPopup()
+    this.setState({
+      selectedFile: file.file
+    })
+    testPlanState.sendRequestViewTestPlan(file.file)
+  }
+
+  onProjectFileClicked(project: projectState.Project, file: scm.FileState, doubleClick: boolean) {
+    this.closeSettingsPopup()
     console.log(`Clicked project ${doubleClick} ${project.rootFolder} ${file.file}`)
   }
 
-  onProjectsUpdated(evt: Projects.AttachedProjectsUpdated) {
-    Promise.all(evt.projects.map((prj: Projects.AttachedProject) => {
-      return new Projects.Project(prj).refresh()
+  onProjectsUpdated(evt: projectState.AttachedProjectsUpdated) {
+    this.closeSettingsPopup()
+    Promise.all(evt.projects.map((prj: projectState.AttachedProject) => {
+      return new projectState.Project(prj).refresh()
         .then((p): ProjectDetails => { return { attachedProject: prj, project: p }})
       })).then((pd: ProjectDetails[]) => {
       this.setState({
@@ -147,11 +212,11 @@ export default class ProjectSidebar extends React.Component<any, State> {
   }
 
   componentDidMount() {
-    Projects.addAttachedProjectsUpdatedListener(this.projectsUpdatedListener)
+    projectState.addAttachedProjectsUpdatedListener(this.projectsUpdatedListener)
   }
 
   componentWillUnmount() {
-    Projects.removeAttachedProjectsUpdatedListener(this.projectsUpdatedListener)
+    projectState.removeAttachedProjectsUpdatedListener(this.projectsUpdatedListener)
   }
 }
 

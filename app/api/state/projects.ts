@@ -7,6 +7,7 @@ import * as scm from '../scm'
 import * as EventEmitter from 'events'
 
 export const ATTACHED_PROJECTS_UPDATED_EVENT = 'updated-attached-projects'
+export const REQUEST_VIEW_PROJECT_DETAILS_EVENT = 'request-view-project'
 
 const PROJECT_EMITTER = new EventEmitter()
 
@@ -52,6 +53,21 @@ export function removeAttachedProjectsUpdatedListener(listener: AttachedProjects
   PROJECT_EMITTER.removeListener(ATTACHED_PROJECTS_UPDATED_EVENT, listener)
 }
 
+export interface RequestViewProjectDetailsListener {
+  (project: AttachedProject): void
+}
+
+export function sendRequestViewProjectDetails(project: AttachedProject) {
+  PROJECT_EMITTER.emit(REQUEST_VIEW_PROJECT_DETAILS_EVENT, project)
+}
+
+export function addRequestViewProjectDetails(listener: RequestViewProjectDetailsListener) {
+  PROJECT_EMITTER.addListener(REQUEST_VIEW_PROJECT_DETAILS_EVENT, listener)
+}
+
+export function removeRequestViewProjectDetails(listener: RequestViewProjectDetailsListener) {
+  PROJECT_EMITTER.removeListener(REQUEST_VIEW_PROJECT_DETAILS_EVENT, listener)
+}
 
 export class Project {
   readonly name: string

@@ -47,4 +47,8 @@ export default class LocalScm extends api.ScmApi {
         return Promise.resolve(ret)
       })
   }
+
+  loadFileRevision(/*revision: api.FileHistory*/): Promise<Buffer | null> {
+    return Promise.resolve(null)
+  }
 }
