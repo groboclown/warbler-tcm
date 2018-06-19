@@ -4,12 +4,11 @@
 
 import * as api from './api'
 import { statDir } from '../files'
+import * as path from 'path'
 
 export default class LocalScm extends api.ScmApi {
-  getFileHistory(): Promise<api.FileHistory[]> {
-    return Promise.resolve([
-      { revision: 'current', user: 'current', comment: '' }
-    ])
+  getFileHistory(/*filename: string*/): Promise<api.FileHistory[]> {
+    return Promise.resolve([])
   }
 
   /**
@@ -45,6 +44,19 @@ export default class LocalScm extends api.ScmApi {
           })
         })
         return Promise.resolve(ret)
+      })
+  }
+
+  getFileState(filename: string): Promise<api.FileState | null> {
+    // Super inefficient
+    return this.listFilesIn(path.dirname(filename))
+      .then((fsl) => {
+        for (let i = 0; i < fsl.length; i++) {
+          if (fsl[i].file == filename) {
+            return fsl[i]
+          }
+        }
+        return null
       })
   }
 

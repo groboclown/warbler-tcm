@@ -1,0 +1,63 @@
+:local {
+  .container {
+
+  }
+
+  .errorShown {
+    position: absolute;
+    left: 2em;
+    right: 2em;
+    top: 3em;
+    visibility: visible;
+    z-index: 7;
+    background-color: #733;
+    color: #ccc;
+    padding: 2em;
+  }
+
+  .errorHidden {
+    visibility: hidden;
+    position: absolute;
+    z-index: -1;
+  }
+
+  .errorTitleBar {
+    border-bottom: 1px solid #ccc;
+  }
+
+  .errorTitle {
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+
+  .errorClose {
+    text-align: right;
+    float: right;
+    cursor: pointer;
+  }
+
+  .errorText {
+    padding-top: 1em;
+  }
+
+
+
+  .toolBar {
+    border-bottom: 2px solid #377;
+    margin: 0;
+    padding: 0;
+  }
+
+  .toolBarButton {
+    padding-left: .2em;
+    color: #499;
+    cursor: pointer;
+  }
+
+  .toolBarDisabled {
+    color: #555;
+    cursor: not-allowed;
+  }
+
+
+}

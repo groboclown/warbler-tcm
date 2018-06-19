@@ -64,11 +64,14 @@ export interface TestExecutionData {
   metadata?: MetaData
   comment?: string
   version?: string
+  revId?: string
   results?: TestExecutionResultData[]
 }
 
-export interface TestPlanRevisionData {
-  revId: string
+export interface TestPlanData {
+  id: string
+  revId?: string
+  name?: string
   metadata?: MetaData
   description?: string
   product?: string
@@ -78,10 +81,4 @@ export interface TestPlanRevisionData {
   runFields?: FieldsMetadata
   tests?: TestCaseData[]
   runs?: TestExecutionData[]
-}
-
-export interface TestPlanData {
-  id: string
-  name?: string
-  revisions?: TestPlanRevisionData[]
 }

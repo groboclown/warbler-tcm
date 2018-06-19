@@ -98,16 +98,18 @@ export default class ProjectSidebar extends React.Component<any, State> {
       {project.name}
       </span>
     )
+    // The tree view doesn't allow for keyboard navigation.  Need to look
+    // for improvements.
     return (
       <TreeView
-            nodeLabel={treeViewLabel}
-            defaultCollapsed={true}
-            onClick={() => { this.onProjectClicked(project, false) }}
-            onDoubleClick={() => { this.onProjectClicked(project, true) }}
-            itemClassName={(this.state.selectedFile == project.rootFolder ? styles.selected : '')}>
-          {project.childProjects.map((p) => { return this.renderProject(p) })}
-          {this.renderPlanFiles(project)}
-          {this.renderProjectFiles(project)}
+          nodeLabel={treeViewLabel}
+          defaultCollapsed={true}
+          onClick={() => { this.onProjectClicked(project, false) }}
+          onDoubleClick={() => { this.onProjectClicked(project, true) }}
+          itemClassName={(this.state.selectedFile == project.rootFolder ? styles.selected : '')}>
+        {project.childProjects.map((p) => { return this.renderProject(p) })}
+        {this.renderPlanFiles(project)}
+        {this.renderProjectFiles(project)}
       </TreeView>
     )
   }

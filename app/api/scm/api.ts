@@ -3,7 +3,9 @@
 export interface FileHistory {
   revision: string
   comment: string
+  when: Date
   user: string
+  scmPath: string
 }
 
 export interface FileState {
@@ -44,6 +46,8 @@ export abstract class ScmApi {
   abstract delete(filename: string): Promise<void>
 
   abstract listFilesIn(directoryName: string): Promise<FileState[]>
+
+  abstract getFileState(filename: string): Promise<FileState | null>
 
   abstract loadFileRevision(revision: FileHistory): Promise<Buffer | null>
 }

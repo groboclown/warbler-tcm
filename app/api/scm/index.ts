@@ -2,6 +2,7 @@
 import { Settings, loadSettings } from '../settings'
 import * as api from './api'
 import LocalScm from './fs-scm'
+import GitScm from './git-cli'
 
 export * from './api'
 
@@ -21,6 +22,8 @@ export function getActiveScm(): Promise<api.ScmApi> {
     }
     if ('fs' == scmName) {
       ret = new LocalScm()
+    } else if ('git' == scmName) {
+      ret = new GitScm()
     } else {
       throw new Error(`unknown SCM implementation ${scmName}`)
     }
@@ -46,6 +49,8 @@ export function getDefaultScmName(): string {
 // Returns a promise in case we ever use modules to load them.
 export function getSupportedScms(): Promise<api.ScmDescription[]> {
   return Promise.resolve([{
-    name: 'fs', description: 'None'
+    name: 'fs', description: 'None',
+  }, {
+    name: 'git', description: 'Git'
   }])
 }

@@ -13,193 +13,180 @@
       "description": "Descriptive name for the test plan.",
       "type": "string"
     },
-    "revisions": {
-      "description": "A list of revisions of the test plan; useful for
-      distributing a complete document of test cases, or for making
-      markers for past revisions that are at a more coarse grain level
-      than the SCM level.",
+    "metadata": { "$ref": "#/definitions/metadata" },
+    "description": {
+      "description": "Long form description for the test plan.
+      By having it be in the revision, it allows for easy comparison
+      of how the test plan has evolved.",
+      "type": "string"
+    },
+    "revId": {
+      "description": "ID of the specific revision. Allows for easier
+      diffs between revisions and for references in test case run results.",
+      "type": "string"
+    },
+    "product": {
+      "description": "The name of the product this tests",
+      "type": "string"
+    },
+    "setup": {
+      "description": "Instructions for setting up the environment in
+      preparation for running the test cases.",
+      "$ref": "#/definitions/orderedTextList"
+    },
+    "teardown": {
+      "description": "Instructions for stopping the environment after
+      test caes execution has completed.",
+      "$ref": "#/definitions/orderedTextList"
+    },
+    "testFields": {
+      "description": "List of fields in the test cases and their visiblity.",
+      "$ref": "#/definitions/fieldsMetadata"
+    },
+    "runFields": {
+      "description": "List of fields in the test cases and their visiblity.",
+      "$ref": "#/definitions/fieldsMetadata"
+    },
+    "tests": {
+      "description": "List of test cases within the test plan.",
       "type": "array",
-      "minItems": 0,
       "items": {
-        "description": "A test plan revision",
+        "description": "A single test case.",
         "type": "object",
-        "additionalProperties": false,
-        "required": ["revId"],
+        "additionalProperties": true,
+        "required": ["tcId"],
         "properties": {
           "metadata": { "$ref": "#/definitions/metadata" },
-          "description": {
-            "description": "Long form description for the test plan.
-            By having it be in the revision, it allows for easy comparison
-            of how the test plan has evolved.",
+          "tcId": {
+            "description": "Test case ID",
             "type": "string"
           },
-          "revId": {
-            "description": "ID of the specific revision. Allows for easier
-            diffs between revisions. Also allows for more flexible references
-            to specific revisions than the index in the list.",
+          "section": {
+            "description": "general area of functionality covered",
             "type": "string"
           },
-          "product": {
-            "description": "The name of the product this tests",
+          "objective": {
+            "description": "A short summary of the test case",
             "type": "string"
+          },
+          "comment": {
+            "description": "A comment about the test case.",
+            "type": "string",
+            "format": "markdown"
           },
           "setup": {
-            "description": "Instructions for setting up the environment in
-            preparation for running the test cases.",
-            "$ref": "#/definitions/orderedTextList"
+            "description": "Instructions for preparing the environment
+            in order to execute the test case.",
+            "$ref": "orderedTextList"
+          },
+          "steps": {
+            "description": "Instructions to execute after the test case
+            completes.",
+            "$ref": "orderedTextList"
+          },
+          "expected": {
+            "description": "Expected outcomes of the test execution
+            steps.  The IDs for each item should match up with the
+            corresponding test step.",
+            "$ref": "orderedTextList"
           },
           "teardown": {
-            "description": "Instructions for stopping the environment after
-            test caes execution has completed.",
-            "$ref": "#/definitions/orderedTextList"
+            "description": "Instructions to execute after the test case
+            completes.",
+            "$ref": "orderedTextList"
           },
-          "testFields": {
-            "description": "List of fields in the test cases and their visiblity.",
-            "$ref": "#/definitions/fieldsMetadata"
+          "priority": {
+            "description": "Priority for execution",
+            "type": "integer",
+            "enum": [1,2,3,4,5]
           },
-          "runFields": {
-            "description": "List of fields in the test cases and their visiblity.",
-            "$ref": "#/definitions/fieldsMetadata"
-          },
-          "tests": {
-            "description": "List of test cases within the test plan.",
+          "requirements": {
+            "description": "List of requirements that this covers",
             "type": "array",
             "items": {
-              "description": "A single test case.",
-              "type": "object",
-              "additionalProperties": true,
-              "required": ["tcId"],
-              "properties": {
-                "metadata": { "$ref": "#/definitions/metadata" },
-                "tcId": {
-                  "description": "Test case ID",
-                  "type": "string"
-                },
-                "section": {
-                  "description": "general area of functionality covered",
-                  "type": "string"
-                },
-                "objective": {
-                  "description": "A short summary of the test case",
-                  "type": "string"
-                },
-                "comment": {
-                  "description": "A comment about the test case.",
+              "type": "string",
+              "format": "ticket-id"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    }
+  },
+  "runs": {
+    "description": "A list of executions of the test cases for this
+    revision of the test plan.",
+    "type": "array",
+    "items": {
+      "description": "A single test execution of the test plan revision.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId"],
+      "properties": {
+        "metadata": { "$ref": "#/definitions/metadata" },
+        "runId": {
+          "description": "A short ID for this test case execution.",
+          "type": "string"
+        },
+        "comment": {
+          "description": "A comment about the test plan execution.",
+          "type": "string",
+          "format": "markdown"
+        },
+        "version": {
+          "description": "Product version under test",
+          "type": "string"
+        },
+        "revId": {
+          "description": "Revision of the test plan the test run ran against",
+          "type": "string"
+        },
+        "results": {
+          "description": "List of test cases executed.",
+          "type": "array",
+          "items": {
+            "description": "A test case execution result",
+            "type": "object",
+            "required": ["tcId"],
+            "additionalProperties": true,
+            "properties": {
+              "tcId": {
+                "description": "reference to the test case ID",
+                "type": "string"
+              },
+              "status": {
+                "description": "state of the test execution",
+                "type": "string",
+                "enum": [
+                  "passed",
+                  "failed",
+                  "skipped",
+                  "blocked",
+                  "invalid",
+                  "wontfix",
+                  "running"
+                ]
+              },
+              "issues": {
+                "description": "list of problems encountered when
+                running this test case",
+                "type": "array",
+                "items": {
                   "type": "string",
-                  "format": "markdown"
+                  "format": "ticket-id"
                 },
-                "setup": {
-                  "description": "Instructions for preparing the environment
-                  in order to execute the test case.",
-                  "$ref": "orderedTextList"
-                },
-                "steps": {
-                  "description": "Instructions to execute after the test case
-                  completes.",
-                  "$ref": "orderedTextList"
-                },
-                "expected": {
-                  "description": "Expected outcomes of the test execution
-                  steps.  The IDs for each item should match up with the
-                  corresponding test step.",
-                  "$ref": "orderedTextList"
-                },
-                "teardown": {
-                  "description": "Instructions to execute after the test case
-                  completes.",
-                  "$ref": "orderedTextList"
-                },
-                "priority": {
-                  "description": "Priority for execution",
-                  "type": "integer",
-                  "enum": [1,2,3,4,5]
-                },
-                "requirements": {
-                  "description": "List of requirements that this covers",
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "format": "ticket-id"
-                  },
-                  "uniqueItems": true
-                }
-              }
-            }
-          },
-          "runs": {
-            "description": "A list of executions of the test cases for this
-            revision of the test plan.",
-            "type": "array",
-            "items": {
-              "description": "A single test execution of the test plan revision.",
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["runId"],
-              "properties": {
-                "metadata": { "$ref": "#/definitions/metadata" },
-                "runId": {
-                  "description": "A short ID for this test case execution.",
-                  "type": "string"
-                },
-                "comment": {
-                  "description": "A comment about the test plan execution.",
-                  "type": "string",
-                  "format": "markdown"
-                },
-                "version": {
-                  "description": "Product version under test",
-                  "type": "string"
-                },
-                "results": {
-                  "description": "List of test cases executed.",
-                  "type": "array",
-                  "items": {
-                    "description": "A test case execution result",
-                    "type": "object",
-                    "required": ["tcId"],
-                    "additionalProperties": true,
-                    "properties": {
-                      "tcId": {
-                        "description": "reference to the test case ID",
-                        "type": "string"
-                      },
-                      "status": {
-                        "description": "state of the test execution",
-                        "type": "string",
-                        "enum": [
-                          "passed",
-                          "failed",
-                          "skipped",
-                          "blocked",
-                          "invalid",
-                          "wontfix",
-                          "running"
-                        ]
-                      },
-                      "issues": {
-                        "description": "list of problems encountered when
-                        running this test case",
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "format": "ticket-id"
-                        },
-                        "uniqueItems": true
-                      },
-                      "stepComments": {
-                        "description": "Rich text comments about the test
-                        results.  The item IDs references the setup,
-                        teardown, or step ID.",
-                        "$ref": "orderedTextList"
-                      },
-                      "comments": {
-                        "description": "Rich text comments about the test results",
-                        "type": "string",
-                        "format": "markdown"
-                      }
-                    }
-                  }
-                }
+                "uniqueItems": true
+              },
+              "stepComments": {
+                "description": "Rich text comments about the test
+                results.  The item IDs references the setup,
+                teardown, or step ID.",
+                "$ref": "orderedTextList"
+              },
+              "comments": {
+                "description": "Rich text comments about the test results",
+                "type": "string",
+                "format": "markdown"
               }
             }
           }

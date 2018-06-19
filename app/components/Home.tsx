@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 import * as testPlanState from '../api/state/test-plan'
 import * as path from 'path'
+import TestPlanUI from './TestPlan'
 
 let styles = require('./Home.scss');
 
@@ -42,17 +43,16 @@ export default class Home extends React.Component<any, HomeState> {
         </div>
       )
     }
+    // TODO tabs should have an "x" on the title to allow closing them.
     return (
       <div className={styles.container} data-tid="container">
-        <Tabs defaultIndex={this.state.selectedIndex}>
+        <Tabs defaultIndex={this.state.selectedIndex} onSelect={(i: number) => { this.onTabSelected(i) }}>
           <TabList className={styles.tablist}>
           {this.state.openTabs.map((t) => {
-            {console.log(`Tab title ${t.title}`)}
             return (<Tab className={styles.tab} selectedClassName={styles.tabselected} disabledClassName={styles.tabdisabled}>{this.renderTabTitle(t)}</Tab>)
           })}
           </TabList>
           {this.state.openTabs.map((t) => {
-            {console.log(`Tab contents ${t.filename}`)}
             return (<TabPanel className={styles.tabpanel} selectedClassName={styles.tabpanelselected}><div>{this.renderTabPanel(t)}</div></TabPanel>)
           })}
         </Tabs>
@@ -65,7 +65,11 @@ export default class Home extends React.Component<any, HomeState> {
   }
 
   renderTabPanel(tab: TabData) {
-    return tab.filename || `New file with title ${tab.title}`
+    if (tab.isTestPlan) {
+      return (<TestPlanUI filename={tab.filename}></TestPlanUI>)
+    } else {
+      return (<div>Some other data for {tab.filename}</div>)
+    }
   }
 
   componentDidMount() {
@@ -134,6 +138,10 @@ export default class Home extends React.Component<any, HomeState> {
       openTabs: tabs,
       selectedIndex: tabs.length - 1
     })
+  }
+
+  onTabSelected(index: number) {
+    this.setState({ selectedIndex: index })
   }
 
   newTestPlan() {
