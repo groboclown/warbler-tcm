@@ -1,16 +1,20 @@
+
+
+
 import * as React from 'react';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 import * as testPlanState from '../api/state/test-plan'
+import * as projectState from '../api/state/projects'
 import * as path from 'path'
 import TestPlanUI from './TestPlan'
+import ProjectOverview from './ProjectOverview'
 
 let styles = require('./Home.scss');
 
 interface TabData {
   title: string
   filename: string | null
-  isTestPlan: boolean
-  isSettings: boolean
+  tabType: 'plan' | 'project' | 'setting'
 }
 
 interface HomeState {
@@ -20,9 +24,10 @@ interface HomeState {
 }
 
 export default class Home extends React.Component<any, HomeState> {
-  closeActiveTabListener: testPlanState.RequestCloseActiveTestPlanListener | null
-  viewTestPlanListener: testPlanState.RequestViewTestPlanListener | null
-  newTestPlanListener: testPlanState.RequestNewTestPlanListener | null
+  private closeActiveTestPlanTabListener: testPlanState.RequestCloseActiveTestPlanListener | null
+  private viewTestPlanListener: testPlanState.RequestViewTestPlanListener | null
+  private newTestPlanListener: testPlanState.RequestNewTestPlanListener | null
+  private viewProjectDetailsListener: projectState.RequestViewProjectDetailsListener | null
 
   constructor(props: any) {
     super(props)
@@ -49,11 +54,22 @@ export default class Home extends React.Component<any, HomeState> {
         <Tabs defaultIndex={this.state.selectedIndex} onSelect={(i: number) => { this.onTabSelected(i) }}>
           <TabList className={styles.tablist}>
           {this.state.openTabs.map((t) => {
-            return (<Tab className={styles.tab} selectedClassName={styles.tabselected} disabledClassName={styles.tabdisabled}>{this.renderTabTitle(t)}</Tab>)
+            return (
+              <Tab
+                className={styles.tab}
+                selectedClassName={styles.tabselected}
+                disabledClassName={styles.tabdisabled}>
+                {this.renderTabTitle(t)}
+              </Tab>)
           })}
           </TabList>
           {this.state.openTabs.map((t) => {
-            return (<TabPanel className={styles.tabpanel} selectedClassName={styles.tabpanelselected}><div>{this.renderTabPanel(t)}</div></TabPanel>)
+            return (
+              <TabPanel
+                className={styles.tabpanel}
+                selectedClassName={styles.tabpanelselected}>
+                <div>{this.renderTabPanel(t)}</div>
+              </TabPanel>)
           })}
         </Tabs>
       </div>
@@ -65,28 +81,35 @@ export default class Home extends React.Component<any, HomeState> {
   }
 
   renderTabPanel(tab: TabData) {
-    if (tab.isTestPlan) {
+    if (tab.tabType == 'plan') {
       return (<TestPlanUI filename={tab.filename}></TestPlanUI>)
+    } else if (tab.tabType == 'project' && tab.filename) {
+      return (<ProjectOverview path={tab.filename}></ProjectOverview>)
     } else {
       return (<div>Some other data for {tab.filename}</div>)
     }
   }
 
   componentDidMount() {
-    this.closeActiveTabListener = () => { this.closeActiveTab() }
-    testPlanState.addRequestCloseActiveTestPlan(this.closeActiveTabListener)
+    // TODO add in more event types, and push the menu constructing into this class.
+
+    this.closeActiveTestPlanTabListener = () => { this.closeActiveTab() }
+    testPlanState.addRequestCloseActiveTestPlanListener(this.closeActiveTestPlanTabListener)
 
     this.viewTestPlanListener = (file: string) => { this.openTestPlan(file) }
     testPlanState.addRequestViewTestPlanListener(this.viewTestPlanListener)
 
     this.newTestPlanListener = () => { this.newTestPlan() }
     testPlanState.addRequestNewTestPlanListener(this.newTestPlanListener)
+
+    this.viewProjectDetailsListener = (project: projectState.ProjectData) => { this.openProjectDetails(project) }
+    projectState.addRequestViewProjectDetails(this.viewProjectDetailsListener)
   }
 
   componentWillUnmount() {
-    if (this.closeActiveTabListener) {
-      testPlanState.removeRequestCloseActiveTestPlan(this.closeActiveTabListener)
-      this.closeActiveTabListener = null
+    if (this.closeActiveTestPlanTabListener) {
+      //testPlanState.removeRequestCloseActiveTestPlan(this.closeActiveTabListener)
+      this.closeActiveTestPlanTabListener = null
     }
     if (this.viewTestPlanListener) {
       testPlanState.removeRequestViewTestPlanListener(this.viewTestPlanListener)
@@ -120,23 +143,10 @@ export default class Home extends React.Component<any, HomeState> {
   }
 
   openTestPlan(file: string) {
-    // TODO actually open the file
-    let tabs = this.state.openTabs
-    for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i].filename == file) {
-        this.setState({ selectedIndex: i })
-        return
-      }
-    }
-    tabs.push({
+    this.addTab({
       title: path.basename(file),
       filename: file,
-      isTestPlan: true,
-      isSettings: false
-    })
-    this.setState({
-      openTabs: tabs,
-      selectedIndex: tabs.length - 1
+      tabType: 'plan'
     })
   }
 
@@ -145,18 +155,38 @@ export default class Home extends React.Component<any, HomeState> {
   }
 
   newTestPlan() {
-    let tabs = this.state.openTabs
     let newIndex = this.state.newCount + 1
-    tabs.push({
+    this.addTab({
       title: `untitled ${newIndex}`,
       filename: null,
-      isTestPlan: true,
-      isSettings: false
+      tabType: 'plan'
     })
     this.setState({
-      openTabs: tabs,
-      selectedIndex: tabs.length - 1,
       newCount: newIndex
+    })
+  }
+
+  openProjectDetails(project: projectState.ProjectData) {
+    this.addTab({
+      title: `Project ${path.basename(project.path)}`,
+      filename: project.path,
+      tabType: 'project'
+    })
+  }
+
+  private addTab(tab: TabData) {
+    let tabs = this.state.openTabs
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].filename == tab.filename) {
+        this.setState({ selectedIndex: i })
+        return
+      }
+    }
+    tabs.push(tab)
+    this.setState({
+      openTabs: tabs,
+      // This selection doesn't seem to work right.
+      selectedIndex: tabs.length - 1,
     })
   }
 }

@@ -4,6 +4,10 @@ import { statDir } from '../files'
 import * as path from 'path'
 import * as childProcess from 'child_process'
 
+// TODO switch to git log --pretty=format:"%h - %an, %ar : %s" style log
+// output (e.g. forced explicit format), to keep future changes to git
+// from breaking this code.
+
 export default class GitCliScm extends api.ScmApi {
   getFileHistory(filename: string): Promise<api.FileHistory[]> {
     return runGit(path.dirname(filename), ['log', '--', filename])
@@ -77,6 +81,11 @@ export default class GitCliScm extends api.ScmApi {
 
   listFilesIn(directoryName: string): Promise<api.FileState[]> {
     // TODO use Git instead.
+    // use "git stat" to find the current state, and
+    // "git log --diff-filter=D --find-renames --summary" to
+    // find deleted or renamed files (it lists renamed files as
+    // deletes).  Each delete line is prefixed with
+    // "delete mode 100644 path/to/file" (or whatever mode was used)
     return statDir(directoryName)
       .then((stats) => {
         let ret: api.FileState[] = []

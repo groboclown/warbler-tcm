@@ -7,7 +7,7 @@ export function createContextMenu(window: BrowserWindow, template: any[]) {
 
       loadSettings()
         .then((settings) => {
-          if (settings.get('mode', 'debug', false)) {
+          if (settings.debug()) {
             let t: any[] = []
             for (let i = 0; i < template.length; i++) {
               t.push(template[i])

@@ -5,42 +5,36 @@ import * as scm from '../api/scm'
 import * as path from 'path'
 import * as dialogs from '../api/electron/dialogs'
 import * as testPlanState from '../api/state/test-plan'
+import { loadSettings } from '../api/settings'
 
 let styles = require('./ProjectSidebar.scss');
 
 interface ProjectDetails {
   project: projectState.Project
-  attachedProject: projectState.AttachedProject
 }
 
 
 export interface State {
   projectDetails: ProjectDetails[]
-
-  // TODO make the loaded setting
-  showDeleted: boolean
-  showNonTestPlanFiles: boolean
-
   selectedFile: string | null
 }
 
 export default class ProjectSidebar extends React.Component<any, State> {
-  private projectsUpdatedListener = (evt: projectState.AttachedProjectsUpdated) => { this.onProjectsUpdated(evt) }
+  private projectsUpdatedListener = (evt: projectState.AttachedProjectsUpdated) => { this.onProjectsUpdated(evt.projects) }
+  private projectScmChangedListener = () => { this.onAllProjectsUpdated() }
+  private testPlanProjectChangedListener = () => { this.onAllProjectsUpdated() }
 
   constructor(props: any) {
     super(props)
     this.state = {
       projectDetails: [],
-      showDeleted: false,
-      showNonTestPlanFiles: false,
       selectedFile: null
     }
     projectState.getAttachedProjects()
       .then((aps) => {
         return Promise.all(aps.map((ap): ProjectDetails => {
           return {
-            project: new projectState.Project(ap),
-            attachedProject: ap
+            project: new projectState.Project(ap, true)
           }
         }))
       })
@@ -69,12 +63,6 @@ export default class ProjectSidebar extends React.Component<any, State> {
         <div className={styles.popup} id="settingsPopUp">
             <div className={styles.titlebutton} onClick={() => { this.addProject() }}>Add Project Folder</div>
             <div className={styles.titlebutton} onClick={() => { this.removeSelectedProject() }}>Remove Project Folder</div>
-            <div onClick={() => { this.toggleShowNonTestPlanFiles() }}><span className={[styles.titlebutton,
-              (this.state.showNonTestPlanFiles ? styles.enabled : styles.disabled)].join(' ')}>x</span><span>Show non-test plan files</span></div>
-            <div className={[styles.titlebutton,
-              (this.state.showDeleted ? styles.enabled : styles.disabled)]
-              .join(' ')}
-              onClick={() => { this.toggleShowDeletedFiles() }}>Show deleted files</div>
         </div>
         <div className={styles.treeContainer}>
         {this.state.projectDetails.map((pd) => { return this.renderProject(pd.project) })}
@@ -128,7 +116,7 @@ export default class ProjectSidebar extends React.Component<any, State> {
   }
 
   renderProjectFiles(project: projectState.Project) {
-    if (this.state.showNonTestPlanFiles) {
+    if (!project.attached.filter || !project.attached.filter.hideNonPlanFiles) {
       return project.projectFiles.map((f) => { return (
             <div
               onClick={() => { this.onProjectFileClicked(project, f, false) }}
@@ -160,35 +148,21 @@ export default class ProjectSidebar extends React.Component<any, State> {
 
   removeSelectedProject() {
     this.closeSettingsPopup()
-    console.log(`Remove selected project`)
+    console.log(`Remove selected project for ${this.state.selectedFile}`)
   }
 
-  toggleShowDeletedFiles() {
-    this.closeSettingsPopup()
-    this.setState({
-      showDeleted: !this.state.showDeleted
-    })
-  }
-
-  toggleShowNonTestPlanFiles() {
-    this.closeSettingsPopup()
-    this.setState({
-      showNonTestPlanFiles: !this.state.showNonTestPlanFiles
-    })
-  }
-
-  onProjectClicked(pd: projectState.Project, doubleClick: boolean) {
-    console.log(`Clicked project ${pd.rootFolder}`)
+  private onProjectClicked(pd: projectState.Project, doubleClick: boolean) {
     this.closeSettingsPopup()
     this.setState({
       selectedFile: pd.rootFolder
     })
-    if (doubleClick) {
+    if (doubleClick && pd.isRoot) {
+      console.log(`Requesting view project ${pd.rootFolder}`)
       projectState.sendRequestViewProjectDetails(pd.attached)
     }
   }
 
-  onPlanFileClicked(file: scm.FileState) {
+  private onPlanFileClicked(file: scm.FileState) {
     this.closeSettingsPopup()
     this.setState({
       selectedFile: file.file
@@ -196,29 +170,45 @@ export default class ProjectSidebar extends React.Component<any, State> {
     testPlanState.sendRequestViewTestPlan(file.file)
   }
 
-  onProjectFileClicked(project: projectState.Project, file: scm.FileState, doubleClick: boolean) {
+  private onProjectFileClicked(project: projectState.Project, file: scm.FileState, doubleClick: boolean) {
     this.closeSettingsPopup()
     console.log(`Clicked project ${doubleClick} ${project.rootFolder} ${file.file}`)
   }
 
-  onProjectsUpdated(evt: projectState.AttachedProjectsUpdated) {
+  private onProjectsUpdated(projects: projectState.ProjectData[]) {
     this.closeSettingsPopup()
-    Promise.all(evt.projects.map((prj: projectState.AttachedProject) => {
-      return new projectState.Project(prj).refresh()
-        .then((p): ProjectDetails => { return { attachedProject: prj, project: p }})
+    Promise.all(projects.map((prj) => {
+      return new projectState.Project(prj, true).refresh()
+        .then((p): ProjectDetails => { return { project: p }})
       })).then((pd: ProjectDetails[]) => {
-      this.setState({
-        projectDetails: pd
-      })
+        this.setState({
+          projectDetails: pd
+        })
     })
+    .catch((err) => {
+      // FIXME correct error reporting
+      console.log(`DUDE! ERROR!`)
+      console.log(err)
+    })
+  }
+
+  private onAllProjectsUpdated() {
+    loadSettings()
+      .then((settings) => {
+        return this.onProjectsUpdated(settings.attachedProjects())
+      })
   }
 
   componentDidMount() {
     projectState.addAttachedProjectsUpdatedListener(this.projectsUpdatedListener)
+    projectState.addProjectScmChangedListener(this.projectScmChangedListener)
+    projectState.addTestPlanProjectChangedListener(this.testPlanProjectChangedListener)
   }
 
   componentWillUnmount() {
     projectState.removeAttachedProjectsUpdatedListener(this.projectsUpdatedListener)
+    projectState.removeProjectScmChangedListener(this.projectScmChangedListener)
+    projectState.removeTestPlanProjectChangedListener(this.testPlanProjectChangedListener)
   }
 }
 

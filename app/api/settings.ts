@@ -1,45 +1,84 @@
 import { readJsonFile, writeJsonFile } from './files'
 import { join } from 'path'
 import { app, remote } from 'electron'
+import { SettingsData, WindowData, ProjectData,
+  DEFAULT_DATA, DEFAULT_PROJECT_DATA } from './model/settings'
+export { SettingsData, ProjectData } from './model/settings'
 
 export class Settings {
   source: string;
-  settings: any = {};
+  private data: SettingsData = {}
 
   load(): Promise<Settings> {
     return readJsonFile(this.source)
       .then((res: object) => {
-        this.settings = res
-        return this
+        this.data = res
       })
       .catch(() => {
-        this.settings = {}
+        this.data = {}
+      })
+      .then(() => {
         return this
       })
   }
   save(): Promise<Settings> {
     console.log(`Saving settings to ${this.source}`)
-    return writeJsonFile(this.source, this.settings)
+    return writeJsonFile(this.source, this.data)
       .then(() => {
         return this
       })
   }
-  get<T>(part: string, key: string, def?: T): T {
-    if (this.settings[part] == undefined
-        || this.settings[part] == null
-        || !(this.settings[part] instanceof Object)
-        || this.settings[part][key] == undefined
-        || this.settings[part][key] == null) {
-      return def as T
+  window(): WindowData {
+    if (!this.data.window) {
+      this.data.window = Object.assign({}, DEFAULT_DATA.window)
     }
-    return this.settings[part][key]
+    return this.data.window
   }
-  put<T>(part: string, key: string, val: T): Settings {
-    if (this.settings[part] == undefined || this.settings[part] == null) {
-      this.settings[part] = {}
+  attachedProjects(): ProjectData[] {
+    if (!this.data.attachedProjects) {
+      this.data.attachedProjects = []
     }
-    this.settings[part][key] = val
-    return this
+    return this.data.attachedProjects
+  }
+  newAttachedProject(filename: string): ProjectData {
+    let ret: ProjectData = Object.assign({}, DEFAULT_PROJECT_DATA)
+    ret.path = filename
+    ret.scm = this.data.defaultScm
+    this.attachedProjects().push(ret)
+    return ret
+  }
+  getAttachedProject(filename: string): ProjectData | null {
+    let p = this.attachedProjects()
+    for (let i = 0; i < p.length; i++) {
+      if (p[i].path == filename) {
+        return p[i]
+      }
+    }
+    return null
+  }
+  getDefaultScm(ifNotSet: string): string {
+    return this.data.defaultScm || ifNotSet
+  }
+  setDefaultScm(scmName: string) {
+    this.data.defaultScm = scmName
+  }
+  debug(): boolean {
+    return this.data.debug || false
+  }
+  setDebug(v: boolean): void {
+    this.data.debug = v
+  }
+  getIdIndex(id: string): number {
+    if (!this.data.idIndex) {
+      this.data.idIndex = {}
+    }
+    return this.data.idIndex[id] || 0
+  }
+  setIdIndex(id: string, index: number) {
+    if (!this.data.idIndex) {
+      this.data.idIndex = {}
+    }
+    this.data.idIndex[id] = index
   }
 }
 

@@ -33,6 +33,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     cursor: default;
+    user-select: none;
   }
   .treeContainer div {
     overflow: hidden;

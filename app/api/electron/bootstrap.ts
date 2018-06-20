@@ -50,15 +50,16 @@ export class ElectronApp {
         // Create the browser window.
         this.mainWindow = new BrowserWindow({
           show: false,
-          width: settings.get('window', 'width', 800),
-          height: settings.get('window', 'height', 600),
-          x: settings.get('window', 'x', undefined),
-          y: settings.get('window', 'y', undefined),
+          width: settings.window().width,
+          height: settings.window().height,
+          x: settings.window().x,
+          y: settings.window().y,
           title: this.config.title,
           icon: `file://${this.config.icon}`
         })
 
-        this.mainWindow.webContents.setZoomFactor(settings.get('window', 'zoom', 1.0))
+        // zoom = 0 should be invalid, so || is appropriate here.
+        this.mainWindow.webContents.setZoomFactor(settings.window().zoom || 1.0)
 
         // and load the index.html of the app.
         this.mainWindow.loadURL(`file://${this.config.home}`)
@@ -71,7 +72,7 @@ export class ElectronApp {
         });
 
         // Open the DevTools.
-        if (settings.get('mode', 'debug', false)) {
+        if (settings.debug()) {
           this.mainWindow.webContents.openDevTools()
         }
 
@@ -105,16 +106,15 @@ export class ElectronApp {
     let webContents = this.mainWindow.webContents
     return loadSettings()
       .then((s) => {
-        s.put('window', 'height', bounds.height)
-          .put('window', 'width', bounds.width)
-          .put('window', 'x', bounds.x)
-          .put('window', 'y', bounds.y)
-
-          .put('mode', 'debug', webContents.isDevToolsOpened())
+        s.window().height = bounds.height
+        s.window().width = bounds.width
+        s.window().x = bounds.x
+        s.window().y = bounds.y
+        s.setDebug(webContents.isDevToolsOpened())
         return getZoomLevel(webContents)
           .then((level: number) => {
-              s.put('window', 'zoom', level)
-              return s
+            s.window().zoom = level
+            return s
           })
       })
       .then((s) => { return s.save() })

@@ -1,9 +1,11 @@
 import * as scm from '../scm'
-import { loadSettings } from '../settings'
+import { loadSettings, ProjectData } from '../settings'
+import { sendTestPlanProjectChanged } from '../state/projects'
 import * as planModel from '../model/plan'
 import * as EventEmitter from 'events'
 import { readTestPlan, writeTestPlan } from '../model/marshal'
 import generateId from '../gen-id'
+import * as path from 'path'
 
 const PLAN_EMITTER = new EventEmitter()
 
@@ -11,13 +13,6 @@ const REQUEST_NEW_TEST_PLAN = 'warbler-request-new-test-plan'
 const REQUEST_VIEW_TEST_PLAN = 'warbler-request-view-test-plan'
 const REQUEST_CLOSE_ACTIVE_TEST_PLAN = 'warbler-request-close-test-plan'
 const TEST_PLAN_CLOSED = 'warbler-test-plan-closed'
-
-export function getRecentlyViewedTestPlanFiles(): Promise<string[]> {
-  return loadSettings()
-    .then((settings) => {
-      return settings.get('test-plans', 'recent', []) as string[]
-    })
-}
 
 // ---------------------------------------------------------------------------
 
@@ -65,21 +60,22 @@ export function sendRequestCloseActiveTestPlan() {
   PLAN_EMITTER.emit(REQUEST_CLOSE_ACTIVE_TEST_PLAN)
 }
 
-export function addRequestCloseActiveTestPlan(listener: RequestCloseActiveTestPlanListener) {
+export function addRequestCloseActiveTestPlanListener(listener: RequestCloseActiveTestPlanListener) {
   PLAN_EMITTER.addListener(REQUEST_CLOSE_ACTIVE_TEST_PLAN, listener)
 }
 
-export function removeRequestCloseActiveTestPlan(listener: RequestCloseActiveTestPlanListener) {
+export function removeRequestCloseActiveTestPlanListener(listener: RequestCloseActiveTestPlanListener) {
   PLAN_EMITTER.removeListener(REQUEST_CLOSE_ACTIVE_TEST_PLAN, listener)
 }
 
 // ------------------------------------------------------------------------
 
 export interface TestPlanClosedListener {
-  (): void
+  (testPlanFile: string): void
 }
 
 export function sendTestPlanClosed(file: string) {
+  /*
   loadSettings()
     .then((settings) => {
       let recent: string[] = settings.get('test-plans', 'recent', [])
@@ -90,21 +86,18 @@ export function sendTestPlanClosed(file: string) {
         .save()
     })
     .then(() => {
-      PLAN_EMITTER.emit(TEST_PLAN_CLOSED)
     })
+  */
+  PLAN_EMITTER.emit(TEST_PLAN_CLOSED, file)
 }
 
-export function addTestPlanClosed(listener: TestPlanClosedListener) {
+export function addTestPlanClosedListener(listener: TestPlanClosedListener) {
   PLAN_EMITTER.addListener(TEST_PLAN_CLOSED, listener)
 }
 
-export function removeTestPlanClosed(listener: TestPlanClosedListener) {
+export function removeTestPlanClosedListener(listener: TestPlanClosedListener) {
   PLAN_EMITTER.removeListener(TEST_PLAN_CLOSED, listener)
 }
-
-// ------------------------------------------------------------------------
-
-
 
 // -----------------------------------------------------------------------
 
@@ -136,12 +129,36 @@ export class ProjectTestPlan {
   }
 
   saveAs(filename: string): Promise<ProjectTestPlan> {
-    this.filename = filename
-    return this.save()
+    return loadSettings()
+      .then((settings) => {
+        const projects = settings.attachedProjects()
+        const newProjectPath = getProjectPathForFile(filename, projects)
+        const originalProjectPath = getProjectPathForFile(this.filename, projects)
+        const changed = newProjectPath != originalProjectPath
+        if (changed) {
+          sendTestPlanProjectChanged({
+            testPlanFile: filename,
+            oldProjectRoot: originalProjectPath,
+            newProjectRoot: newProjectPath
+          })
+        }
+        this.filename = filename
+        return this.save()
+          .then(() => {
+            if (changed) {
+              return this.loadHistory()
+            }
+            return this
+          })
+      })
   }
 
   isLoaded(): boolean {
     return this.plan != null
+  }
+
+  onScmChange(): Promise<ProjectTestPlan> {
+    return this.loadHistory()
   }
 
   getScmHistory(): scm.FileHistory[] {
@@ -156,7 +173,11 @@ export class ProjectTestPlan {
     if (plan != null) {
       return Promise.resolve(plan)
     }
-    return scm.getActiveScm()
+    return loadSettings()
+      .then((settings) => {
+        let projectPath = getProjectPathForFile(this.filename, settings.attachedProjects())
+        return scm.getActiveScm(projectPath)
+      })
       .then((scmImpl) => {
         return scmImpl.loadFileRevision(this.history[index].log)
       })
@@ -199,8 +220,12 @@ export class ProjectTestPlan {
       .then((tp) => {
         this.history = []
         this.plan = tp
-        return scm.getActiveScm()
+        return this.loadHistory()
       })
+  }
+
+  private loadHistory(): Promise<ProjectTestPlan> {
+    return getScmFor(this.filename)
       .then((scmImpl) => {
         if (this.filename != null) {
           return scmImpl.getFileState(this.filename)
@@ -224,4 +249,40 @@ export class ProjectTestPlan {
         return this
       })
   }
+}
+
+
+function getScmFor(file: string | null): Promise<scm.ScmApi> {
+  let projectPath: Promise<string | null>
+  if (file == null) {
+    projectPath = Promise.resolve(null)
+  } else {
+    let f: string = file
+    projectPath = loadSettings()
+      .then((settings) => {
+        return getProjectPathForFile(f, settings.attachedProjects())
+      })
+  }
+  return projectPath
+    .then((path) => {
+      return scm.getActiveScm(path)
+    })
+}
+
+
+function getProjectPathForFile(file: string | null, projects: ProjectData[]): string | null {
+  if (!file) {
+    return null
+  }
+  let parent = file
+  while (parent != null && parent.length > 0) {
+    console.log(`Checking matching project for file ${parent}`)
+    for (let i = 0; i < projects.length; i++) {
+      if (projects[i].path == parent) {
+        return projects[i].path
+      }
+    }
+    parent = path.dirname(parent)
+  }
+  return null
 }

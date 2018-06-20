@@ -33,6 +33,7 @@ export default class LocalScm extends api.ScmApi {
   }
 
   listFilesIn(directoryName: string): Promise<api.FileState[]> {
+    // console.log(`fs: listing files from ${directoryName}`)
     return statDir(directoryName)
       .then((stats) => {
         let ret: api.FileState[] = []
@@ -44,6 +45,11 @@ export default class LocalScm extends api.ScmApi {
           })
         })
         return Promise.resolve(ret)
+      })
+      .catch((err) => {
+        console.log(`ERROR listing ${directoryName}`)
+        console.log(err)
+        throw err
       })
   }
 
