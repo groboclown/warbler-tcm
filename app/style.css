@@ -25,8 +25,8 @@ body {
   - .panel
   - .popup-panel
   - .titlebar
-  - .small-button
-  - .large-button
+  - .icon-button
+  - .text-button
   - .tab-bar
   - .tab
   - .tab-selected
@@ -34,6 +34,12 @@ body {
   - .resizer-vertical
   - .resizer-horiztonal
   - .default-help-text
+  - .tree-node
+  - .tree-node-selected
+  - .tree-folder
+  - .tree-project
+  - .tree-plan
+  - .tree-file
 */
 
 
@@ -122,4 +128,51 @@ body {
 .dark .tab-disabled {
   color: #555;
   cursor: default;
+}
+
+.dark .text-button {
+  background-color: #5cc;
+  color: #222;
+  margin: 0.8em;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.dark .tree-view {
+  overflow: auto;
+}
+
+.dark .tree-node {
+
+}
+
+.dark .tree-node:before {
+}
+
+.dark .tree-node-selected:before {
+  background-color: #333;
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1em;
+}
+
+.dark .tree-node-selected:focus {
+  background-color: #344;
+}
+
+.dark .tree-project {
+  color: #ddd;
+}
+
+.dark .tree-folder {
+  color: #ccc;
+}
+
+.dark .tree-file {
+  color: #555;
+}
+
+.dark .tree-plan {
+  color: #488;
 }

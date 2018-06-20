@@ -61,14 +61,14 @@ export default class ProjectSidebar extends React.Component<any, State> {
           </span>
         </div>
         <div className={[styles.popup, 'popup-panel'].join(' ')} id="settingsPopUp">
-            <div className={styles.titlebutton} onClick={() => { this.addProject() }}>Add Project Folder</div>
-            <div className={styles.titlebutton} onClick={() => { this.removeSelectedProject() }}>Remove Project Folder</div>
+            <div className={[styles.titlebutton, 'text-button'].join(' ')} onClick={() => { this.addProject() }}>Add Project Folder</div>
+            <div className={[styles.titlebutton, 'text-button'].join(' ')} onClick={() => { this.removeSelectedProject() }}>Remove Project Folder</div>
         </div>
         <div className={styles.treeContainer}>
         {this.state.projectDetails.map((pd) => { return this.renderProject(pd.project) })}
         </div>
       </div>
-    );
+    )
   }
 
   renderProject(project: projectState.Project): JSX.Element {
@@ -94,7 +94,11 @@ export default class ProjectSidebar extends React.Component<any, State> {
           defaultCollapsed={true}
           onClick={() => { this.onProjectClicked(project, false) }}
           onDoubleClick={() => { this.onProjectClicked(project, true) }}
-          itemClassName={(this.state.selectedFile == project.rootFolder ? styles.selected : '')}>
+          itemClassName={[
+            (this.state.selectedFile == project.rootFolder ? styles.selected : ''),
+            'tree-node',
+            (project.isRoot ? 'tree-project' : 'tree-folder')
+          ].join(' ')}>
         {project.childProjects.map((p) => { return this.renderProject(p) })}
         {this.renderPlanFiles(project)}
         {this.renderProjectFiles(project)}
@@ -108,7 +112,10 @@ export default class ProjectSidebar extends React.Component<any, State> {
           onClick={() => { this.onPlanFileClicked(f) }}
           onDoubleClick={() => { this.onPlanFileClicked(f) }}
           className={[
-            (this.state.selectedFile == f.file ? styles.selected : '')
+            (this.state.selectedFile == f.file ? styles.selected : ''),
+            'tree-node',
+            (this.state.selectedFile == f.file ? 'tree-node-selected' : ''),
+            'tree-plan'
           ].join(' ')}
           ><span className={styles.planFile}>{path.basename(f.file)}</span>
         </div>
@@ -122,7 +129,9 @@ export default class ProjectSidebar extends React.Component<any, State> {
               onClick={() => { this.onProjectFileClicked(project, f, false) }}
               onDoubleClick={() => { this.onProjectFileClicked(project, f, true) }}
               className={[
-                (this.state.selectedFile == f.file ? styles.selected : '')
+                (this.state.selectedFile == f.file ? styles.selected : ''),
+                'tree-node',
+                'tree-file'
               ].join(' ')}
               ><span className={styles.projectFile}>{path.basename(f.file)}</span>
             </div>
