@@ -41,8 +41,8 @@ export default class Home extends React.Component<any, HomeState> {
   render() {
     if (this.state.openTabs.length <= 0) {
       return (
-        <div className={styles.container} data-tid="container">
-          <div className={styles.empty}>
+        <div className={[styles.container, 'panel'].join(' ')}>
+          <div className={[styles.empty, 'default-help-text'].join(' ')}>
             Create a new test plan or open an existing one to get started.
           </div>
         </div>
@@ -50,15 +50,15 @@ export default class Home extends React.Component<any, HomeState> {
     }
     // TODO tabs should have an "x" on the title to allow closing them.
     return (
-      <div className={styles.container} data-tid="container">
+      <div className={[styles.container, 'panel'].join(' ')}>
         <Tabs defaultIndex={this.state.selectedIndex} onSelect={(i: number) => { this.onTabSelected(i) }}>
-          <TabList className={styles.tablist}>
+          <TabList className={[styles.tablist, 'tab-bar'].join(' ')}>
           {this.state.openTabs.map((t) => {
             return (
               <Tab
-                className={styles.tab}
-                selectedClassName={styles.tabselected}
-                disabledClassName={styles.tabdisabled}>
+                className={[styles.tab, 'tab'].join(' ')}
+                selectedClassName={[styles.tabselected, 'tab-selected'].join(' ')}
+                disabledClassName={[styles.tabdisabled, 'tab-disabled'].join(' ')}>
                 {this.renderTabTitle(t)}
               </Tab>)
           })}

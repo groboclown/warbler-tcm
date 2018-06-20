@@ -2,28 +2,31 @@ import * as React from 'react';
 import { RouteComponentProps } from 'react-router';
 import Home from '../components/Home';
 import ProjectSidebar from '../components/ProjectSidebar'
-//import SplitPane from 'react-split-pane'
 import SplitPane from '../components/SplitPane'
+import { loadSettings } from '../api/settings'
+import * as Theme from '../api/state/theme'
 
 let styles = require('./HomePage.scss');
 
 interface HomePageState {
-  sidebarOpen: boolean
-  size?: number
+  theme: string
 }
 
 /**
  * Splits the page into a project view and a tab view.
  */
 export class HomePage extends React.Component<RouteComponentProps<any>, HomePageState> {
+  private themeListener: Theme.ThemeChangedListener | null
+
   render() {
-    //let sidebarContent = <ProjectSidebar/>
+    // TODO make the initial size of the split pane persistent
     return (
-      <div className={styles.root}>
+      <div className={[styles.root, this.state.theme].join(' ')}>
         <SplitPane
               defaultSize="20%"
               minSize="5"
-              split="vertical">
+              split="vertical"
+              resizerClassName="resizer-vertical">
           <ProjectSidebar/>
           <Home/>
         </SplitPane>
@@ -34,13 +37,25 @@ export class HomePage extends React.Component<RouteComponentProps<any>, HomePage
   constructor(props: any) {
     super(props)
     this.state = {
-      sidebarOpen: true,
-      size: 0.2
+      theme: 'dark'
     }
+    loadSettings().then((settings) => {
+      this.setState({ theme: settings.getTheme() })
+    })
   }
 
-  onSetSidebarOpen(open: boolean) {
-    this.setState({sidebarOpen: open})
+  componentDidMount() {
+    this.themeListener = (theme) => { this.setState({
+      theme: theme
+    })}
+    Theme.addThemeChangedListener(this.themeListener)
+  }
+
+  componentWillUnmount() {
+    if (this.themeListener) {
+      Theme.removeThemeChangedListener(this.themeListener)
+      this.themeListener = null
+    }
   }
 }
 

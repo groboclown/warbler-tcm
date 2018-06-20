@@ -62,9 +62,8 @@
 
 
   .hamburger {
-    /*color: #ccc;
-    border-bottom: 0.125em solid #ccc;*/
-    content: "";
+    /* TODO allow the colors to be selected by the style */
+    /*content: "";*/
     background: linear-gradient(
       to bottom,
       #5aa, #5aa 20%,
@@ -73,16 +72,13 @@
       #111 60%, #111 80%,
       #5aa 80%, #5aa 100%
     );
-      width: 2em;
+    height: 0.8em;
     cursor: pointer;
   }
 
   .popup {
     visibility: hidden;
     position: absolute;
-    background: #344;
-    padding: 1em;
-    color: #ccc;
     right: 0;
     z-index: 7;
   }

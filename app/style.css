@@ -19,3 +19,107 @@ body {
   vertical-align: center;
   text-align: center;
 }
+
+/* Themes */
+/* All themes must provide class color definitions for:
+  - .panel
+  - .popup-panel
+  - .titlebar
+  - .small-button
+  - .large-button
+  - .tab-bar
+  - .tab
+  - .tab-selected
+  - .tab-disabled
+  - .resizer-vertical
+  - .resizer-horiztonal
+  - .default-help-text
+*/
+
+
+
+
+/* Dark Theme */
+
+.dark ::-webkit-scrollbar-thumb {
+  border-radius: .4em;
+  border: .2em solid #222;
+  background: #444;
+  background-clip: content-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  border-radius: 0;
+  border: 0px;
+  background: #444;
+  background-clip: content-box;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #222;
+}
+
+.dark ::-webkit-scrollbar-corner {
+  background: #222;
+}
+
+.dark ::-webkit-scrollbar {
+  width: 0.8em;
+  height: 0.8em;
+}
+
+.dark .panel {
+  background: #222;
+  font-family: system-ui;
+  font-size: 0.9em;
+}
+
+.dark .popup-panel {
+  background: #344;
+  padding: 1em;
+  color: #ccc;
+}
+
+.dark .resizer-vertical {
+  background-color: #022;
+  flex: 0 0 0.3em;
+}
+
+.dark .default-help-text {
+  color: #444;
+  text-shadow: 0.1em 0.1em #111;
+}
+
+.dark .titlebar {
+  background: #111;
+  color: #ddd;
+  font-size: 1em;
+}
+
+.dark .tab-bar {
+  border-bottom: 1px solid #466;
+  margin: 0 0 1em;
+  padding: 0;
+  background: #111;
+}
+
+.dark .tab {
+  border: 1px solid transparent;
+  border-bottom: none;
+  padding: 6px 12px;
+  color: #888;
+  font-size: 0.8rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dark .tab-selected {
+  background: #222;
+  border-color: #466;
+  color: #ccc;
+  border-radius: 5px 5px 0 0;
+}
+
+.dark .tab-disabled {
+  color: #555;
+  cursor: default;
+}

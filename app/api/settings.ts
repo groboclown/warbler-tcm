@@ -80,6 +80,12 @@ export class Settings {
     }
     this.data.idIndex[id] = index
   }
+  getTheme(): string {
+    return this.data.theme || 'dark'
+  }
+  setTheme(theme: string) {
+    this.data.theme = theme
+  }
 }
 
 const GLOBAL_SETTINGS: Settings = new Settings()

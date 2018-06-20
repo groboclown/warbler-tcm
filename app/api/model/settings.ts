@@ -32,6 +32,7 @@ export interface SettingsData {
   debug?: boolean
   idIndex?: IdIndex
   openedTabs?: string[]
+  theme?: string
 }
 
 export const DEFAULT_DATA: SettingsData = {
@@ -40,7 +41,8 @@ export const DEFAULT_DATA: SettingsData = {
     width: 800, height: 600,
     zoom: 1.0
   },
-  debug: false
+  debug: false,
+  theme: 'dark'
 }
 
 export const DEFAULT_PROJECT_DATA: ProjectData = {

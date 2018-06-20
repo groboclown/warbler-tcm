@@ -51,9 +51,8 @@ export class Resizer extends React.Component<Props, State> {
     const classes = [resizerClassName, split, className];
 
     style = Object.assign(style || {}, {
-      flex: '0 0 5px',
-      cursor: 'col-resize',
-      backgroundColor: 'black'
+      /*flex: '0 0 5px', defined in style*/
+      cursor: 'col-resize'
     })
 
     return (

@@ -53,14 +53,14 @@ export default class ProjectSidebar extends React.Component<any, State> {
     // TODO Clean up these buttons.
 
     return (
-      <div className={styles.container} id='ProjectContainer'>
-        <div className={styles.titlebar}>
+      <div className={[styles.container, 'panel'].join(' ')} id='ProjectContainer'>
+        <div className={[styles.titlebar, 'titlebar'].join(' ')}>
           <span className={styles.title}>Projects</span>
           <span className={styles.titlebuttons}>
-            <span className={styles.hamburger} onClick={() => { this.toggleSettings() }}>&nbsp;&nbsp;&nbsp;</span>
+            <span className={styles.hamburger} onClick={() => { this.toggleSettings() }}>&nbsp;&nbsp;&nbsp;&nbsp;</span>
           </span>
         </div>
-        <div className={styles.popup} id="settingsPopUp">
+        <div className={[styles.popup, 'popup-panel'].join(' ')} id="settingsPopUp">
             <div className={styles.titlebutton} onClick={() => { this.addProject() }}>Add Project Folder</div>
             <div className={styles.titlebutton} onClick={() => { this.removeSelectedProject() }}>Remove Project Folder</div>
         </div>
