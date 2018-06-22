@@ -22,6 +22,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
 
+    "allowSyntheticDefaultImports": true,
+
     "sourceMap": true,
 
     "outDir": "./dist"

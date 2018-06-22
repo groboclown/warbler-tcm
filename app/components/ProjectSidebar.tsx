@@ -1,10 +1,12 @@
 import * as React from 'react';
-import * as TreeView from 'react-treeview'
+//import { InfiniteTree } from 'react-infinite-tree'
+//import { TreeNode, Tree, LoadDoneFunction } from 'react-infinite-tree'
+import InfiniteTree from '../containers/RxInfiniteTree'
 import * as projectState from '../api/state/projects'
 import * as scm from '../api/scm'
-import * as path from 'path'
+//import * as path from 'path'
 import * as dialogs from '../api/electron/dialogs'
-import * as testPlanState from '../api/state/test-plan'
+//import * as testPlanState from '../api/state/test-plan'
 import { loadSettings } from '../api/settings'
 
 let styles = require('./ProjectSidebar.scss');
@@ -17,6 +19,13 @@ interface ProjectDetails {
 export interface State {
   projectDetails: ProjectDetails[]
   selectedFile: string | null
+}
+
+interface NodeData {
+  readonly project: projectState.Project | null
+  readonly isRootFolder: boolean
+  readonly planFile: scm.FileState | null
+  readonly otherFile: scm.FileState | null
 }
 
 export default class ProjectSidebar extends React.Component<any, State> {
@@ -50,8 +59,8 @@ export default class ProjectSidebar extends React.Component<any, State> {
   }
 
   render() {
-    // TODO Clean up these buttons.
-
+    let treeData: NodeData[] = this.loadProjectNodes()
+    console.log(`${treeData}`)
     return (
       <div className={[styles.container, 'panel'].join(' ')} id='ProjectContainer'>
         <div className={[styles.titlebar, 'titlebar'].join(' ')}>
@@ -65,81 +74,112 @@ export default class ProjectSidebar extends React.Component<any, State> {
             <div className={[styles.titlebutton, 'text-button'].join(' ')} onClick={() => { this.removeSelectedProject() }}>Remove Project Folder</div>
         </div>
         <div className={styles.treeContainer}>
-        {this.state.projectDetails.map((pd) => { return this.renderProject(pd.project) })}
+          <InfiniteTree width="100%"></InfiniteTree>
         </div>
       </div>
     )
   }
 
-  renderProject(project: projectState.Project): JSX.Element {
-    project.childProjects.sort((p1: projectState.Project, p2: projectState.Project) => {
-      return strSort(p1.name, p2.name)})
-    project.planFiles.sort((f1: scm.FileState, f2: scm.FileState) => {
-      return strSort(f1.file, f2.file)})
-    project.projectFiles.sort((f1: scm.FileState, f2: scm.FileState) => {
-      return strSort(f1.file, f2.file)})
-    // TODO: file / directory type should indicate the icon,
-    // while the SCM type should indicate the color.
-    let treeViewLabel = (<span
-      onClick={() => { this.onProjectClicked(project, false) }}
-      onDoubleClick={() => { this.onProjectClicked(project, true) }}>
-      {project.name}
-      </span>
-    )
-    // The tree view doesn't allow for keyboard navigation.  Need to look
-    // for improvements.
-    return (
-      <TreeView
-          nodeLabel={treeViewLabel}
-          defaultCollapsed={true}
-          onClick={() => { this.onProjectClicked(project, false) }}
-          onDoubleClick={() => { this.onProjectClicked(project, true) }}
-          itemClassName={[
-            (this.state.selectedFile == project.rootFolder ? styles.selected : ''),
-            'tree-node',
-            (project.isRoot ? 'tree-project' : 'tree-folder')
-          ].join(' ')}>
-        {project.childProjects.map((p) => { return this.renderProject(p) })}
-        {this.renderPlanFiles(project)}
-        {this.renderProjectFiles(project)}
-      </TreeView>
-    )
-  }
-
-  renderPlanFiles(project: projectState.Project) {
-    return project.planFiles.map((f) => { return (
-        <div
-          onClick={() => { this.onPlanFileClicked(f) }}
-          onDoubleClick={() => { this.onPlanFileClicked(f) }}
-          className={[
-            (this.state.selectedFile == f.file ? styles.selected : ''),
-            'tree-node',
-            (this.state.selectedFile == f.file ? 'tree-node-selected' : ''),
-            'tree-plan'
-          ].join(' ')}
-          ><span className={styles.planFile}>{path.basename(f.file)}</span>
-        </div>
-      )})
-  }
-
-  renderProjectFiles(project: projectState.Project) {
-    if (!project.attached.filter || !project.attached.filter.hideNonPlanFiles) {
-      return project.projectFiles.map((f) => { return (
-            <div
-              onClick={() => { this.onProjectFileClicked(project, f, false) }}
-              onDoubleClick={() => { this.onProjectFileClicked(project, f, true) }}
-              className={[
-                (this.state.selectedFile == f.file ? styles.selected : ''),
-                'tree-node',
-                'tree-file'
-              ].join(' ')}
-              ><span className={styles.projectFile}>{path.basename(f.file)}</span>
-            </div>
-      )})
+  /*
+          <InfiniteTree
+              autoOpen={false}
+              selectable={true}
+              width="100%"
+              rowHeight="1.2em"
+              data={treeData}
+              rowRenderer={(node: TreeNode & NodeData, tree: Tree<NodeData>, index: number) => {
+                return this.renderNode(node, tree, index)
+              }}
+              loadNodes={(parentNode: TreeNode & NodeData, done: LoadDoneFunction<NodeData>) => {
+                this.loadNodes(parentNode, done)
+              }}
+              onSelectNode={(node: TreeNode & NodeData) => {
+                this.onSelectNode(node)
+              }}
+              >
+          </InfiniteTree>
+  */
+/*
+  private renderNode(node: TreeNode & NodeData, tree: Tree<NodeData>, _: number): JSX.Element {
+    // TODO move these into the project tree
+    let selectedNode = tree.getSelectedNode()
+    if (node.isRootFolder) {
+      return (<span className={[
+        (node == selectedNode ? styles.selected : ''),
+        'tree-node', 'tree-project'].join(' ')}></span>)
+    } else if (node.project) {
+      return (<span className={[
+        (node == selectedNode ? styles.selected : ''),
+        'tree-node', 'tree-folder'].join(' ')}></span>)
+    } else if (node.planFile) {
+      return (<span className={[
+        (node == selectedNode ? styles.selected : ''),
+        'tree-node',
+        'tree-plan',
+        styles.planFile,
+      ].join(' ')}
+      >{path.basename(node.planFile.file)}</span>)
+    } else if (node.otherFile) {
+      return (<span className={[
+        (node == selectedNode ? styles.selected : ''),
+        'tree-node',
+        'tree-file',
+        styles.projectFile,
+      ].join(' ')}
+      >{path.basename(node.otherFile.file)}</span>)
     }
-    return null
+    return (<span>(unknown)</span>)
+  }
+*/
+  private loadProjectNodes(): NodeData[] {
+    return this.state.projectDetails.map((pd) => {
+      return {
+        project: pd.project, isRootFolder: true, planFile: null, otherFile: null
+      }
+    })
+  }
+/*
+  private loadNodes(parentNode: TreeNode & NodeData, done: LoadDoneFunction<NodeData>) {
+    if (parentNode.project) {
+      // Immediate children of the project
+      let project: projectState.Project = parentNode.project
+      project.childProjects.sort((p1: projectState.Project, p2: projectState.Project) => {
+        return strSort(p1.name, p2.name)})
+      project.planFiles.sort((f1: scm.FileState, f2: scm.FileState) => {
+        return strSort(f1.file, f2.file)})
+      project.projectFiles.sort((f1: scm.FileState, f2: scm.FileState) => {
+        return strSort(f1.file, f2.file)})
+      let ret: NodeData[] = []
+      ret.concat(project.childProjects.map((p): NodeData => {
+        return {
+          project: p, isRootFolder: false, planFile: null, otherFile: null
+        }
+      }))
+      ret.concat(project.planFiles.map((p): NodeData => {
+        return {
+          project: null, isRootFolder: false, planFile: p, otherFile: null
+        }
+      }))
+      ret.concat(project.projectFiles.map((p): NodeData => {
+        return {
+          project: null, isRootFolder: false, planFile: null, otherFile: p
+        }
+      }))
+      done(null, ret)
+    }
   }
 
+  private onSelectNode(node: TreeNode & NodeData) {
+    if (node.project && node.isRootFolder) {
+      // TODO how to allow for double click notification?
+      this.onProjectClicked(node.project, false)
+    } else if (node.planFile) {
+      this.onPlanFileClicked(node.planFile)
+    } else if (node.otherFile) {
+      this.onOtherFileClicked(node.otherFile)
+    }
+  }
+*/
   toggleSettings() {
     let el = document.getElementById('settingsPopUp');
     if (el) { el.classList.toggle(styles.show) }
@@ -159,7 +199,7 @@ export default class ProjectSidebar extends React.Component<any, State> {
     this.closeSettingsPopup()
     console.log(`Remove selected project for ${this.state.selectedFile}`)
   }
-
+/*
   private onProjectClicked(pd: projectState.Project, doubleClick: boolean) {
     this.closeSettingsPopup()
     this.setState({
@@ -179,11 +219,11 @@ export default class ProjectSidebar extends React.Component<any, State> {
     testPlanState.sendRequestViewTestPlan(file.file)
   }
 
-  private onProjectFileClicked(project: projectState.Project, file: scm.FileState, doubleClick: boolean) {
+  private onOtherFileClicked(file: scm.FileState) {
     this.closeSettingsPopup()
-    console.log(`Clicked project ${doubleClick} ${project.rootFolder} ${file.file}`)
+    console.log(`Clicked ${file.file}`)
   }
-
+*/
   private onProjectsUpdated(projects: projectState.ProjectData[]) {
     this.closeSettingsPopup()
     Promise.all(projects.map((prj) => {
@@ -220,7 +260,7 @@ export default class ProjectSidebar extends React.Component<any, State> {
     projectState.removeTestPlanProjectChangedListener(this.testPlanProjectChangedListener)
   }
 }
-
+/*
 function strSort(s1: string, s2: string): number {
   return s1 == s2
     ? 0
@@ -228,3 +268,4 @@ function strSort(s1: string, s2: string): number {
       ? -1
       : 1
 }
+*/

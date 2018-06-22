@@ -14,10 +14,8 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "react-infinite-tree": "^1.0.0-alpha.6",
     "react-tabs": "^2.2.2"
   },
   "devDependencies": {
-    "react-treeview": "^0.4.7"
   }
 }

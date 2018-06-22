@@ -111,6 +111,7 @@
   ],
   "homepage": "https://github.com/groboclown/warbler-tcm#readme",
   "devDependencies": {
+    "@types/classnames": "^2.2.4",
     "@types/enzyme": "^3.1.1",
     "@types/history": "^4.5.2",
     "@types/jest": "^22.0.0",

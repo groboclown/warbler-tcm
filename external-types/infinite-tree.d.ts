@@ -1,6 +1,6 @@
 
-declare module 'react-infinite-tree' {
-  import * as React from 'react'
+declare module 'infinite-tree' {
+
 
   export interface EventOptions {
     /** Sets true to prevent events from being triggered. */
@@ -34,7 +34,23 @@ declare module 'react-infinite-tree' {
     shallowRendering: boolean
   }
 
+  export interface NodeFilter<T> {
+    (node: TreeNode & T): boolean
+  }
+
   export class Tree<T> {
+    nodes: TreeNode[]
+
+    constructor(/*args: any*/)
+
+    emit(signalName: string): void
+
+    destroy(): void
+
+    removeListener(signalName: string, listener: Function): void
+
+    on(signalName: string, listener: Function): void
+
     /**
     Adds an array of new child nodes to a parent node at the specified index.
     Arguments
@@ -438,6 +454,11 @@ declare module 'react-infinite-tree' {
     /** The total number of child nodes. */
     total: number
 
+    /** Private data */
+    state: {
+      filtered: boolean
+    }
+
 
     /**
     Returns a boolean value indicating whether a node is a descendant of a given node or not.
@@ -569,102 +590,5 @@ declare module 'react-infinite-tree' {
     // → true
     */
     isLastChild(): boolean
-  }
-
-  export interface RowHeightFunction<T> {
-    (node: TreeNode, tree: Tree<T>, index: number): number
-  }
-
-  export interface RowRendererFunction<T> {
-    (node: TreeNode, tree: Tree<T>, index: number): JSX.Element
-  }
-
-  export interface LoadDoneFunction<T> {
-    (error: any, children: T[], completedCallback?: Function): void
-  }
-
-  export interface LoadNodesFunction<T> {
-    (parentNode: TreeNode, done: LoadDoneFunction<T>): void
-  }
-
-  export interface NodeFilter<T> {
-    (node: TreeNode & T): boolean
-  }
-
-  export interface ScrollListener {
-    (scrollTop: number, event: React.UIEvent): void
-  }
-
-  export interface NodeListener<T> {
-    (node: TreeNode & T): void
-  }
-
-  export interface Props<T> {
-    /** Whether to open all nodes when tree is loaded. */
-    autoOpen?: boolean
-
-    /** Whether or not a node is selectable in the tree. */
-    selectable?: boolean
-
-    /** Specifies the tab order to make tree focusable. */
-    tabIndex?: number
-
-    /** Tree data structure, or a collection of tree data structures. */
-    data?: any[] | any
-
-    /** The tree width. It can be a number or string like "auto" or "100%". */
-    width: number | string
-
-    /** The tree height. Setting 100% height is currently not supported. See https://github.com/cheton/react-infinite-tree/issues/8. */
-    height?: number | string
-
-    /** Either a fixed height, an array containing the heights of all the rows, or a function that returns the height of the given node. */
-    rowHeight?: number | string | any[] |  RowHeightFunction<T>
-
-    /** A row renderer for rendering a tree node. */
-    rowRenderer?: RowRendererFunction<T>
-
-    /** Loads nodes on demand. */
-    loadNodes?: LoadNodesFunction<T>
-
-    /** Provides a function to determine if a node can be selected or deselected. The function must return true or false. This function will not take effect if selectable is not true. */
-    shouldSelectNode?: NodeFilter<T>
-
-    /** Controls the scroll offset. */
-    scrollOffset?: number
-
-    /** Node index to scroll to. */
-    scrollToIndex?: number
-
-    /** Callback invoked whenever the scroll offset changes. */
-    onScroll?: ScrollListener
-
-    /** Callback invoked before updating the tree. */
-    onContentWillUpdate?: Function
-
-    /** Callback invoked when the tree is updated. */
-    onContentDidUpdate?: Function
-
-    /** Callback invoked when a node is opened. */
-    onOpenNode?: NodeListener<T>
-
-    /** Callback invoked when a node is closed. */
-    onCloseNode?: NodeListener<T>
-
-    /** Callback invoked when a node is selected or deselected. */
-    onSelectNode?: NodeListener<T>
-
-    /** Callback invoked before opening a node. */
-    onWillOpenNode?: NodeListener<T>
-
-    /** Callback invoked before closing a node. */
-    onWillCloseNode?: NodeListener<T>
-
-    /** Callback invoked before selecting or deselecting a node. */
-    onWillSelectNode?: NodeListener<T>
-  }
-
-  export class InfiniteTree<T> extends React.Component<Props<T>, any> {
-    constructor(props: Props<T>)
   }
 }
